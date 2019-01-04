@@ -1,27 +1,64 @@
-const mongoose = require("mongoose");
-const Schema = mongoose.Schema;
-
-// Create Schema
-const UserSchema = new Schema({
-  name:{
-    type:String,
-    required:true
-  },
-  email:{
-    type:String,
-    required:true
-  },
-  password:{
-    type:String,
-    required:true
-  },
-  avatar:{
-    type:String
-  },
-  date:{
-    type:Date,
-    default:Date.now
-  }
-})
-
-module.exports = User = mongoose.model("users",UserSchema);
+const sequelize = require('../db/connect');
+const Sequelize = require('sequelize');
+const moment = require('moment');
+const User = sequelize.define('t_user', {
+    nickName: {
+        type: Sequelize.STRING,
+        allowNull: true
+    },
+    name: {
+        type: Sequelize.STRING,
+        allowNull: false
+    },
+    sex: {
+        type: Sequelize.INTEGER,
+        allowNull: true
+    },
+    birthday: {
+        type: Sequelize.DATE,
+        get() {
+            return moment(this.getDataValue('birthday')).format('YYYY-MM-DD');
+        },
+        allowNull: true
+    },
+    phone: {
+        type: Sequelize.STRING,
+        allowNull: true
+    },
+    cardNum: {
+        type: Sequelize.STRING,
+        allowNull: true
+    },
+    email: {
+        type: Sequelize.STRING,
+        allowNull: false
+    },
+    password: {
+        type: Sequelize.STRING,
+        allowNull: false
+    },
+    avatar: {
+        type: Sequelize.STRING,
+        allowNull: false
+    },
+    identity: {
+        type: Sequelize.STRING,
+        allowNull: false
+    },
+    createdAt: {
+        type: Sequelize.DATE,
+        get() {
+            return moment(this.getDataValue('createdAt')).format('YYYY-MM-DD HH:mm:ss');
+        }
+    },
+    updatedAt: {
+        type: Sequelize.DATE,
+        get() {
+            return moment(this.getDataValue('updatedAt')).format('YYYY-MM-DD HH:mm:ss');
+        }
+    },
+    state: {
+        type: Sequelize.INTEGER
+    }
+});
+module.exports = User;
