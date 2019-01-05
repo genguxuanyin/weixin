@@ -8,6 +8,8 @@ const app = express();
 const users = require('./routes/api/users');
 const profiles = require('./routes/api/profiles');
 
+app.use(express.static('uploads'));
+
 // DB config
 // const db = require('./config/keys').mongoURI;
 

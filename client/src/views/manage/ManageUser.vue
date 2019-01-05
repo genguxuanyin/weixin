@@ -21,7 +21,7 @@
       >
         <el-table-column type="index" label="用户头像" align="center" width="100">
           <template slot-scope="scope">
-            <img :src="scope.row.avatar">
+            <img :src="baseUrl+scope.row.avatar">
           </template>
         </el-table-column>
         <el-table-column prop="nickName" label="昵称" align="center" width="250"></el-table-column>

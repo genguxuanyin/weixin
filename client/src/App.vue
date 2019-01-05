@@ -11,8 +11,16 @@ export default {
   created() {
     if (localStorage.eleToken) {
       const decode = jwt_decode(localStorage.eleToken);
-      this.$store.dispatch("setIsAutnenticated", !this.isEmpty(decode));
-      this.$store.dispatch("setUser", decode);
+      this.$axios
+        .get(`/api/users/${decode.id}`)
+        .then(res => {
+          // 存储数据
+          this.$store.dispatch("setIsAutnenticated", !this.isEmpty(res.data));
+          this.$store.dispatch("setUser", res.data);
+        })
+        .catch(err => {
+          throw err;
+        });
     }
   },
   methods: {

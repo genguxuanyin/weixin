@@ -7,6 +7,10 @@ const gravatar = require('gravatar');
 const keys = require('../../config/keys');
 const passport = require('passport');
 
+const fs = require("fs");
+const multer = require('multer');
+const upload = multer();
+
 const User = require('../../models/User');
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op;
@@ -28,15 +32,18 @@ router.post('/register', (req, res) => {
     console.log('email:', req.body.email)
     User.findOne({
             where: {
-                [Op.or]: [
-                    {name: req.body.name},
-                    {email: req.body.email}
+                [Op.or]: [{
+                        name: req.body.name
+                    },
+                    {
+                        email: req.body.email
+                    }
                 ]
             }
         })
         .then(user => {
             if (user) {
-                return res.status(400).json(user.name == req.body.name ? '用户名已被注册':'邮箱已被注册');
+                return res.status(400).json(user.name == req.body.name ? '用户名已被注册' : '邮箱已被注册');
             } else {
                 const avatar = gravatar.url(req.body.email, {
                     s: '200',
@@ -72,10 +79,15 @@ router.post('/login', (req, res) => {
     const password = req.body.password;
     User.findOne({
             where: {
-                [Op.or]: [
-                    {name: account},
-                    {phone: account},
-                    {email: account}
+                [Op.or]: [{
+                        name: account
+                    },
+                    {
+                        phone: account
+                    },
+                    {
+                        email: account
+                    }
                 ]
             }
         })
@@ -88,14 +100,7 @@ router.post('/login', (req, res) => {
                     console.log('isMatch:', isMatch)
                     if (isMatch) {
                         const rule = {
-                            id: user.id,
-                            nickName: user.nickName,
-                            name: user.name,
-                            sex: user.sex,
-                            birthday: user.birthday,
-                            phone: user.phone,
-                            avatar: user.avatar,
-                            identity: user.identity
+                            id: user.id
                         };
                         jwt.sign(rule, keys.secretOrKey, {
                             expiresIn: "1 days" //过期时间
@@ -137,6 +142,29 @@ router.get(
     }
 );
 
+// @route  GET api/users/id
+// @desc   return user by id
+// @access Private
+router.get(
+    '/:id',
+    passport.authenticate('jwt', {
+        session: false
+    }),
+    (req, res) => {
+        User.findById(req.params.id).then(user => {
+                if (!user) {
+                    return res.status(404).json('没有任何内容');
+                }
+                res.json(user);
+            })
+            .catch(err => {
+                console.log(err);
+                res.status(404).json(err)
+            });
+
+    }
+);
+
 // @route  POST api/users/edit
 // @desc   编辑用户信息接口
 // @access Private
@@ -161,7 +189,55 @@ router.post(
             where: {
                 id: req.params.id
             }
-        }).then(user => res.json(user));
+        }).spread((affectedCount, affectedRows) => {
+            if (affectedCount == 1) {
+                User.findById(req.params.id).then((user) => {
+                    if (!user) {
+                        return res.status(404).json('没有任何内容');
+                    }
+                    res.json(user);
+                }).catch(err => {
+                    return res.status(404).json(err);
+                })
+            } else {
+                return res.status(404).json('操作失败,请重试');
+            }
+        });
+    }
+);
+
+// @route  POST api/users/file
+// @desc   上传用户头像接口
+// @access Private
+
+router.post(
+    '/file/:id',
+    upload.single('avatar'),
+    /*     passport.authenticate('jwt', {
+            session: false
+        }), */
+    (req, res) => {
+        // 上传的文件信息
+        var path = `${__dirname}/../../uploads/`;
+        var name = `${Date.now()}_${req.file.originalname}`;
+        User.findById(req.params.id).then((user) => {
+            fs.unlink(`${path}${user.avatar}`, (err) => {
+                if (err) {
+                    console.log(`no such file or directory, unlink ${path}${user.avatar}`);
+                };
+                fs.writeFile(`${path}${name}`, req.file.buffer, function (err) {
+                    if (err) {
+                        throw err;
+                    }
+                    user.avatar = name;
+                    user.save().then((user) => {
+                        res.json(user);
+                    });
+                });
+            });
+        }).catch(err => {
+            return res.status(404).json(err);
+        });
     }
 );
 

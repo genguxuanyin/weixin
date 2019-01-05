@@ -68,15 +68,26 @@ export default {
               // 解析token
               const decode = jwt_decode(token);
 
-              // 存储数据
-              this.$store.dispatch("setIsAutnenticated", !this.isEmpty(decode));
-              this.$store.dispatch("setUser", decode);
+              console.log("decode:", decode);
+              this.$axios
+                .get(`/api/users/${decode.id}`)
+                .then(res => {
+                  // 存储数据
+                  this.$store.dispatch(
+                    "setIsAutnenticated",
+                    !this.isEmpty(res.data)
+                  );
+                  this.$store.dispatch("setUser", res.data);
 
-              // 页面跳转
-              this.$router.push("/index");
+                  // 页面跳转
+                  this.$router.push("/index");
+                })
+                .catch(err => {
+                  throw err;
+                });
             })
             .catch(err => {
-              if(err.response.status == 404){
+              if (err.response.status == 404) {
                 this.$message({
                   message: err.response.data,
                   type: "error"

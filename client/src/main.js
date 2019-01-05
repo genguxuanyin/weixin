@@ -8,7 +8,8 @@ import axios from './http'
 
 Vue.use(ElementUI);
 
-Vue.prototype.$axios = axios
+Vue.prototype.$axios = axios;
+Vue.prototype.baseUrl = 'http://localhost:5001/';
 
 Vue.config.productionTip = false
 
